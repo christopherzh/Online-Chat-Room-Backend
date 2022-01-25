@@ -43,10 +43,9 @@ async def get():
     return {"message":"Hello!!"}
 
 
-@app.get("/api")
-async def chat():
-    return {"message":"PASS!"}
-    # await websocket.accept()
-    # while True:
-    #     data = await websocket.receive_text()
-    #     await websocket.send_text(f"Message is : {data}")
+@app.websocket("/api")
+async def chat(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        await websocket.send_text(f"Message is : {data}")
