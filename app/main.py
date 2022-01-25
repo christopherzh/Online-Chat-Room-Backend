@@ -43,7 +43,7 @@ html = """
 #     return HTMLResponse(html)
 
 
-@app.websocket("/")
+@app.websocket("/api")
 async def chat(websocket: WebSocket):
     await websocket.accept()
     while True:
