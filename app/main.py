@@ -44,7 +44,7 @@ async def get():
 
 
 @app.get("/api")
-async def chat(websocket: WebSocket):
+async def chat():
     return {"message":"PASS!"}
     # await websocket.accept()
     # while True:
