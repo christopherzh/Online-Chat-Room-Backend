@@ -38,9 +38,9 @@ html = """
 """
 
 
-# @app.get("/")
-# async def get():
-#     return HTMLResponse(html)
+@app.get("/")
+async def get():
+    return {"message":"Hello!!"}
 
 
 @app.websocket("/api")
