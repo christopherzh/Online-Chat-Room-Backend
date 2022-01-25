@@ -43,7 +43,7 @@ async def get():
     return {"message":"Hello!!"}
 
 
-@app.websocket("/api")
+@app.get("/api")
 async def chat(websocket: WebSocket):
     return {"message":"PASS!"}
     # await websocket.accept()
