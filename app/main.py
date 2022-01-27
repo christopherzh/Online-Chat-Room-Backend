@@ -94,7 +94,7 @@ class ConnectionManager:
         self.active_connections.append(websocket)
         if self.redis_pool is None:
             self.redis_pool = await aioredis.from_url(
-                "redis://" + DB.get_config.get_ip(), password=DB.get_config.get_pwd()
+                "redis://" + get_config.get_ip(), password=get_config.get_pwd()
             )
             self.pubsub = self.redis_pool.pubsub()
         if self.pubsub is not None:
