@@ -1,7 +1,8 @@
 import asyncio
+import sys
 from fastapi import Cookie, Depends, FastAPI, Query, WebSocket, status, WebSocketDisconnect
 from typing import Optional, List
-from app.DB import get_config
+from DB import get_config
 from fastapi.responses import HTMLResponse
 import aioredis
 import hiredis
@@ -93,7 +94,7 @@ class ConnectionManager:
         self.active_connections.append(websocket)
         if self.redis_pool is None:
             self.redis_pool = await aioredis.from_url(
-                "redis://" + get_config.get_ip(), password=get_config.get_pwd()
+                "redis://" + DB.get_config.get_ip(), password=DB.get_config.get_pwd()
             )
             self.pubsub = self.redis_pool.pubsub()
         if self.pubsub is not None:
