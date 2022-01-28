@@ -30,25 +30,33 @@ html = """
             var client_id = Date.now()
             document.querySelector("#ws-id").textContent = client_id;
             var ws = null;
+            var redis=null;
             function connect(event) {
                 var itemId = document.getElementById("itemId")
                 var token = document.getElementById("token")
                 ws = new WebSocket("ws://localhost:8000/api/0/" + itemId.value + "/ws?token=" + token.value+"&client_id="+Number(client_id));
-                                redis = new WebSocket("ws://localhost:8000/api/1/"+Number(client_id))
-                redis.onmessage = function(event) {
-                    var messages = document.getElementById('messages')
-                    var message = document.createElement('li')
-                    var content = document.createTextNode(event.data)
-                    message.appendChild(content)
-                    messages.appendChild(message)
-                };
                 ws.onmessage = function(event) {
-                    var messages = document.getElementById('messages')
-                    var message = document.createElement('li')
-                    var content = document.createTextNode(event.data)
-                    message.appendChild(content)
-                    messages.appendChild(message)
+                    if((event.data=="127.0.0.1" || event.data=="127.0.0.2")){
+                        if(redis ==null){
+                        redis = new WebSocket("ws://"+event.data+":8000/api/1/"+Number(client_id))
+                                    redis.onmessage = function(event) {
+                                        var messages = document.getElementById('messages')
+                                        var message = document.createElement('li')
+                                        var content = document.createTextNode(event.data)
+                                        message.appendChild(content)
+                                        messages.appendChild(message)
+            };
+            }
+                    }
+                    else{
+                        var messages = document.getElementById('messages')
+                        var message = document.createElement('li')
+                        var content = document.createTextNode(event.data)
+                        message.appendChild(content)
+                        messages.appendChild(message)
+                    };
                 };
+
                 event.preventDefault()
             }
             function sendMessage(event) {
@@ -146,12 +154,9 @@ async def websocket_redis(websocket: WebSocket,client_id: Optional[int] = None):
     await redis_manager.conn_redis(client_id)
     try:
         while True:
-            # t1 = time.time()
             message = await redis_manager.pubsub[client_id].get_message(ignore_subscribe_messages=True)
-            # print("time for getting msg:", time.time() - t1)
             if message is not None and message['data'].decode('utf-8')[0:13] != str(client_id):
                 print(f"(Reader) Message Received: {message}", type(message))
-                # await manager.send_personal_message(f"redis:{message['data']}", websocket)
                 await manager.send_personal_message(
                     f"Client #{message['data'].decode('utf-8')[0:13]} says: {message['data'].decode('utf-8')[13:]}",
                     websocket)
