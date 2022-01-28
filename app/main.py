@@ -167,7 +167,7 @@ async def websocket_endpoint(
         client_id: Optional[int] = None
 ):
     await manager.connect(websocket)
-    await manager.send_personal_message(get_config.get_localhost(), websocket)
+    await manager.send_personal_message(str(get_config.get_localhost()), websocket)
     try:
         while True:
             t2 = time.time()
