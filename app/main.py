@@ -111,7 +111,6 @@ class RedisConnectionManager:
                 "redis://" + get_config.get_ip(), password=get_config.get_pwd()
             )
             self.pubsub[client_id] = self.redis_pool[client_id].pubsub()
-        if self.pubsub.get(client_id) is not None:
             await self.pubsub[client_id].subscribe("channel:1")
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
@@ -168,6 +167,7 @@ async def websocket_endpoint(
         client_id: Optional[int] = None
 ):
     await manager.connect(websocket)
+    await manager.send_personal_message(get_config.get_localhost(), websocket)
     try:
         while True:
             t2 = time.time()
