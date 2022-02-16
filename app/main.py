@@ -2,13 +2,11 @@ from fastapi import Cookie, Depends, FastAPI, Query, WebSocket, status, WebSocke
 from typing import Optional, List, Dict, Any
 
 from DB import get_config
-from fastapi.responses import HTMLResponse
 import aioredis
 import time
 
 import grpc
 from grpc_reflection.v1alpha import reflection
-import grpc_client
 import asyncio
 from protobuf import im_protobuf_pb2
 from protobuf import im_protobuf_pb2_grpc
