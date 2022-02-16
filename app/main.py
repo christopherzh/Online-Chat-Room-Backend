@@ -1,80 +1,41 @@
-import asyncio
-
 from fastapi import Cookie, Depends, FastAPI, Query, WebSocket, status, WebSocketDisconnect
-from typing import Optional, List, Dict,Any
-
-from starlette.endpoints import WebSocketEndpoint
-from starlette.types import Scope, Send, Receive
+from typing import Optional, List, Dict, Any
 
 from DB import get_config
 from fastapi.responses import HTMLResponse
 import aioredis
 import time
 
+import grpc
+from grpc_reflection.v1alpha import reflection
+import grpc_client
+import asyncio
+from protobuf import im_protobuf_pb2
+from protobuf import im_protobuf_pb2_grpc
+
 app = FastAPI()
 
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <h2>Your ID: <span id="ws-id"></span></h2>
-        <form action="" onsubmit="sendMessage(event)">
-            <label>Item ID: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
-            <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
-            <button onclick="connect(event)">Connect</button>
-            <hr>
-            <label>Message: <input type="text" id="messageText" autocomplete="off"/></label>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var client_id = Date.now()
-            document.querySelector("#ws-id").textContent = client_id;
-            var ws = null;
-            var redis=null;
-            function connect(event) {
-                var itemId = document.getElementById("itemId")
-                var token = document.getElementById("token")
-                ws = new WebSocket("ws://localhost:8000/api/0/" + itemId.value + "/ws?token=" + token.value+"&client_id="+Number(client_id));
-                ws.onmessage = function(event) {
-                    if((event.data=="127.0.0.1" || event.data=="127.0.0.2")){
-                        if(redis ==null){
-                        redis = new WebSocket("ws://"+event.data+":8000/api/1/"+Number(client_id))
-                                    redis.onmessage = function(event) {
-                                        var messages = document.getElementById('messages')
-                                        var message = document.createElement('li')
-                                        var content = document.createTextNode(event.data)
-                                        message.appendChild(content)
-                                        messages.appendChild(message)
-            };
-            }
-                    }
-                    else{
-                        var messages = document.getElementById('messages')
-                        var message = document.createElement('li')
-                        var content = document.createTextNode(event.data)
-                        message.appendChild(content)
-                        messages.appendChild(message)
-                    };
-                };
 
-                event.preventDefault()
-            }
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
+class AccServer(im_protobuf_pb2_grpc.AccServerServicer):
+    async def QueryUsersOnline(self, request, context):
+        return im_protobuf_pb2.QueryUsersOnlineRsp(retCode=200, errMsg='Success', online=True)
+
+
+async def serve():
+    # 实例化一个rpc服务，使用协程的方式启动我们的服务
+    service_names = (
+        im_protobuf_pb2.DESCRIPTOR.services_by_name["AccServer"].full_name,
+        reflection.SERVICE_NAME,
+    )
+
+    server = grpc.aio.server()
+    # 添加我们服务
+    im_protobuf_pb2_grpc.add_AccServerServicer_to_server(AccServer(), server)
+    reflection.enable_server_reflection(service_names, server)
+    # 配置启动的端口
+    server.add_insecure_port('[::]:50051')
+    await server.start()
+    await server.wait_for_termination()
 
 
 class ConnectionManager:
@@ -100,23 +61,14 @@ class RedisConnectionManager:
     def __init__(self):
         self.redis_pool = {}
         self.pubsub = {}
-        # self.ws_pool={}
 
     async def conn_redis(self, client_id):
-        # if self.ws_pool.get(client_id) is None:
-        #     self.ws_pool[client_id]=websocket
         if self.redis_pool.get(client_id) is None:
             self.redis_pool[client_id] = await aioredis.from_url(
                 "redis://" + get_config.get_ip(), password=get_config.get_pwd()
             )
             self.pubsub[client_id] = self.redis_pool[client_id].pubsub()
             await self.pubsub[client_id].subscribe("channel:1")
-
-    # async def connect(self, websocket: WebSocket):
-    #     await websocket.accept()
-    #
-    # async def send_personal_message(self, message: str, websocket: WebSocket):
-    #     await websocket.send_text(message)
 
     def disconnect(self, client_id):
         del self.pubsub[client_id]
@@ -126,7 +78,8 @@ class RedisConnectionManager:
 manager = ConnectionManager()
 redis_manager = RedisConnectionManager()
 
-async def register_pubsub(client_id,websocket):
+
+async def register_pubsub(client_id, websocket):
     # pool = aioredis.ConnectionPool.from_url("redis://" + get_config.get_ip(), password=get_config.get_pwd(), max_connections=20)
     # redis = aioredis.Redis(connection_pool=pool)
     await redis_manager.conn_redis(client_id)
@@ -138,21 +91,27 @@ async def register_pubsub(client_id,websocket):
                 f"用户 #{message['data'].decode('utf-8')[0:13]} 说了: {message['data'].decode('utf-8')[13:]}",
                 websocket)
 
-    # 加下面的的话就会容易断开！傻叉了！
-    # pool.close()
-    # await pool.wait_closed()
-
 
 @app.on_event('startup')
 async def on_startup():
     # 设置发布者属性对象
     app.state.manager = manager
     # 设置任务渠道消费者
+    loop = asyncio.get_event_loop()
+    loop.create_task(serve())
+
+
+def run():
+    stub = im_protobuf_pb2_grpc.AccServerStub(grpc.insecure_channel('localhost:50051'))
+    # 生成请求我们的服务的函数的时候，需要传递的参数体，它放在hello_pb2里面-请求体为：hello_pb2.HelloRequest对象
+    response = stub.QueryUsersOnline(im_protobuf_pb2.QueryUsersOnlineReq(appId=613, userId='zzh'))
+    return {'reply', "QueryUsersOnline" + str(response.retCode)}
 
 
 @app.get("/")
 async def get():
-    return HTMLResponse(html)
+    return 0
+
 
 async def get_cookie_or_token(
         websocket: WebSocket,
@@ -162,38 +121,6 @@ async def get_cookie_or_token(
     if session is None and token is None:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
     return session or token
-
-
-# @app.websocket("internal/ws")
-# class EchoServer(WebSocketEndpoint):
-#     def __init__(self, scope: Scope, receive: Receive, send: Send):
-#         super().__init__(scope, receive, send)
-#
-#     async def on_connect(self, websocket: WebSocket) -> None:
-#         pass
-#
-#     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
-#         pass
-#
-#     async def on_receive(self, websocket: WebSocket, data: Any) -> None:
-#         pass
-
-
-@app.websocket("/api/1/{client_id}")
-async def websocket_redis(websocket: WebSocket, client_id: Optional[int] = None):
-    pass
-    # await redis_manager.connect(websocket)
-    # await redis_manager.conn_redis(client_id)
-    # try:
-    #     while True:
-    #         message = await redis_manager.pubsub[client_id].get_message(ignore_subscribe_messages=True)
-    #         if message is not None and message['data'].decode('utf-8')[0:13] != str(client_id):
-    #             print(f"(Reader) Message Received: {message}", type(message))
-    #             await manager.send_personal_message(
-    #                 f"用户 #{message['data'].decode('utf-8')[0:13]} 说了: {message['data'].decode('utf-8')[13:]}",
-    #                 websocket)
-    # except WebSocketDisconnect:
-    #     redis_manager.disconnect(client_id)
 
 
 @app.websocket("/api/0/{item_id}/ws")
@@ -207,7 +134,7 @@ async def websocket_endpoint(
     await manager.connect(websocket, client_id)
     await manager.send_personal_message(str(get_config.get_localhost()), websocket)
     loop = asyncio.get_event_loop()
-    loop.create_task(register_pubsub(client_id,websocket))
+    loop.create_task(register_pubsub(client_id, websocket))
     try:
         while True:
             t2 = time.time()
