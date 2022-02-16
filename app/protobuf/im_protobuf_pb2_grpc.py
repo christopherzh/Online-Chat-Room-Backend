@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import im_protobuf_pb2 as im__protobuf__pb2
+from protobuf import im_protobuf_pb2 as im__protobuf__pb2
 
 
 class AccServerStub(object):
@@ -20,6 +20,21 @@ class AccServerStub(object):
                 request_serializer=im__protobuf__pb2.QueryUsersOnlineReq.SerializeToString,
                 response_deserializer=im__protobuf__pb2.QueryUsersOnlineRsp.FromString,
                 )
+        self.SendMsg = channel.unary_unary(
+                '/protobuf.AccServer/SendMsg',
+                request_serializer=im__protobuf__pb2.SendMsgReq.SerializeToString,
+                response_deserializer=im__protobuf__pb2.SendMsgRsp.FromString,
+                )
+        self.SendMsgAll = channel.unary_unary(
+                '/protobuf.AccServer/SendMsgAll',
+                request_serializer=im__protobuf__pb2.SendMsgAllReq.SerializeToString,
+                response_deserializer=im__protobuf__pb2.SendMsgAllRsp.FromString,
+                )
+        self.GetUserList = channel.unary_unary(
+                '/protobuf.AccServer/GetUserList',
+                request_serializer=im__protobuf__pb2.GetUserListReq.SerializeToString,
+                response_deserializer=im__protobuf__pb2.GetUserListRsp.FromString,
+                )
 
 
 class AccServerServicer(object):
@@ -33,6 +48,27 @@ class AccServerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendMsg(self, request, context):
+        """发送消息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendMsgAll(self, request, context):
+        """给这台机器的房间内所有用户发送消息
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetUserList(self, request, context):
+        """获取用户列表
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AccServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -40,6 +76,21 @@ def add_AccServerServicer_to_server(servicer, server):
                     servicer.QueryUsersOnline,
                     request_deserializer=im__protobuf__pb2.QueryUsersOnlineReq.FromString,
                     response_serializer=im__protobuf__pb2.QueryUsersOnlineRsp.SerializeToString,
+            ),
+            'SendMsg': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendMsg,
+                    request_deserializer=im__protobuf__pb2.SendMsgReq.FromString,
+                    response_serializer=im__protobuf__pb2.SendMsgRsp.SerializeToString,
+            ),
+            'SendMsgAll': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendMsgAll,
+                    request_deserializer=im__protobuf__pb2.SendMsgAllReq.FromString,
+                    response_serializer=im__protobuf__pb2.SendMsgAllRsp.SerializeToString,
+            ),
+            'GetUserList': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUserList,
+                    request_deserializer=im__protobuf__pb2.GetUserListReq.FromString,
+                    response_serializer=im__protobuf__pb2.GetUserListRsp.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -66,5 +117,56 @@ class AccServer(object):
         return grpc.experimental.unary_unary(request, target, '/protobuf.AccServer/QueryUsersOnline',
             im__protobuf__pb2.QueryUsersOnlineReq.SerializeToString,
             im__protobuf__pb2.QueryUsersOnlineRsp.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SendMsg(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/protobuf.AccServer/SendMsg',
+            im__protobuf__pb2.SendMsgReq.SerializeToString,
+            im__protobuf__pb2.SendMsgRsp.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SendMsgAll(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/protobuf.AccServer/SendMsgAll',
+            im__protobuf__pb2.SendMsgAllReq.SerializeToString,
+            im__protobuf__pb2.SendMsgAllRsp.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetUserList(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/protobuf.AccServer/GetUserList',
+            im__protobuf__pb2.GetUserListReq.SerializeToString,
+            im__protobuf__pb2.GetUserListRsp.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

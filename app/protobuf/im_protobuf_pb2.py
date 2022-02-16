@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'\n\031io.grpc.examples.protobufB\rProtobufProtoP\001',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x11im_protobuf.proto\x12\x08protobuf\"4\n\x13QueryUsersOnlineReq\x12\r\n\x05\x61ppId\x18\x01 \x01(\r\x12\x0e\n\x06userId\x18\x02 \x01(\t\"F\n\x13QueryUsersOnlineRsp\x12\x0f\n\x07retCode\x18\x01 \x01(\r\x12\x0e\n\x06\x65rrMsg\x18\x02 \x01(\t\x12\x0e\n\x06online\x18\x03 \x01(\x08\"q\n\nSendMsgReq\x12\x0b\n\x03seq\x18\x01 \x01(\t\x12\r\n\x05\x61ppId\x18\x02 \x01(\r\x12\x0e\n\x06userId\x18\x03 \x01(\t\x12\x0b\n\x03\x63ms\x18\x04 \x01(\t\x12\x0c\n\x04type\x18\x05 \x01(\t\x12\x0b\n\x03msg\x18\x06 \x01(\t\x12\x0f\n\x07isLocal\x18\x07 \x01(\x08\"@\n\nSendMsgRsp\x12\x0f\n\x07retCode\x18\x01 \x01(\r\x12\x0e\n\x06\x65rrMsg\x18\x02 \x01(\t\x12\x11\n\tsendMsgId\x18\x03 \x01(\t\"c\n\rSendMsgAllReq\x12\x0b\n\x03seq\x18\x01 \x01(\t\x12\r\n\x05\x61ppId\x18\x02 \x01(\r\x12\x0e\n\x06userId\x18\x03 \x01(\t\x12\x0b\n\x03\x63ms\x18\x04 \x01(\t\x12\x0c\n\x04type\x18\x05 \x01(\t\x12\x0b\n\x03msg\x18\x06 \x01(\t\"C\n\rSendMsgAllRsp\x12\x0f\n\x07retCode\x18\x01 \x01(\r\x12\x0e\n\x06\x65rrMsg\x18\x02 \x01(\t\x12\x11\n\tsendMsgId\x18\x03 \x01(\t\"\x1f\n\x0eGetUserListReq\x12\r\n\x05\x61ppId\x18\x01 \x01(\r\"A\n\x0eGetUserListRsp\x12\x0f\n\x07retCode\x18\x01 \x01(\r\x12\x0e\n\x06\x65rrMsg\x18\x02 \x01(\t\x12\x0e\n\x06userId\x18\x03 \x03(\t2_\n\tAccServer\x12R\n\x10QueryUsersOnline\x12\x1d.protobuf.QueryUsersOnlineReq\x1a\x1d.protobuf.QueryUsersOnlineRsp\"\x00\x42,\n\x19io.grpc.examples.protobufB\rProtobufProtoP\x01\x62\x06proto3'
+  serialized_pb=b'\n\x11im_protobuf.proto\x12\x08protobuf\"4\n\x13QueryUsersOnlineReq\x12\r\n\x05\x61ppId\x18\x01 \x01(\r\x12\x0e\n\x06userId\x18\x02 \x01(\t\"F\n\x13QueryUsersOnlineRsp\x12\x0f\n\x07retCode\x18\x01 \x01(\r\x12\x0e\n\x06\x65rrMsg\x18\x02 \x01(\t\x12\x0e\n\x06online\x18\x03 \x01(\x08\"q\n\nSendMsgReq\x12\x0b\n\x03seq\x18\x01 \x01(\t\x12\r\n\x05\x61ppId\x18\x02 \x01(\r\x12\x0e\n\x06userId\x18\x03 \x01(\t\x12\x0b\n\x03\x63ms\x18\x04 \x01(\t\x12\x0c\n\x04type\x18\x05 \x01(\t\x12\x0b\n\x03msg\x18\x06 \x01(\t\x12\x0f\n\x07isLocal\x18\x07 \x01(\x08\"@\n\nSendMsgRsp\x12\x0f\n\x07retCode\x18\x01 \x01(\r\x12\x0e\n\x06\x65rrMsg\x18\x02 \x01(\t\x12\x11\n\tsendMsgId\x18\x03 \x01(\t\"c\n\rSendMsgAllReq\x12\x0b\n\x03seq\x18\x01 \x01(\t\x12\r\n\x05\x61ppId\x18\x02 \x01(\r\x12\x0e\n\x06userId\x18\x03 \x01(\t\x12\x0b\n\x03\x63ms\x18\x04 \x01(\t\x12\x0c\n\x04type\x18\x05 \x01(\t\x12\x0b\n\x03msg\x18\x06 \x01(\t\"C\n\rSendMsgAllRsp\x12\x0f\n\x07retCode\x18\x01 \x01(\r\x12\x0e\n\x06\x65rrMsg\x18\x02 \x01(\t\x12\x11\n\tsendMsgId\x18\x03 \x01(\t\"\x1f\n\x0eGetUserListReq\x12\r\n\x05\x61ppId\x18\x01 \x01(\r\"A\n\x0eGetUserListRsp\x12\x0f\n\x07retCode\x18\x01 \x01(\r\x12\x0e\n\x06\x65rrMsg\x18\x02 \x01(\t\x12\x0e\n\x06userId\x18\x03 \x03(\t2\x9f\x02\n\tAccServer\x12R\n\x10QueryUsersOnline\x12\x1d.protobuf.QueryUsersOnlineReq\x1a\x1d.protobuf.QueryUsersOnlineRsp\"\x00\x12\x37\n\x07SendMsg\x12\x14.protobuf.SendMsgReq\x1a\x14.protobuf.SendMsgRsp\"\x00\x12@\n\nSendMsgAll\x12\x17.protobuf.SendMsgAllReq\x1a\x17.protobuf.SendMsgAllRsp\"\x00\x12\x43\n\x0bGetUserList\x12\x18.protobuf.GetUserListReq\x1a\x18.protobuf.GetUserListRsp\"\x00\x42,\n\x19io.grpc.examples.protobufB\rProtobufProtoP\x01\x62\x06proto3'
 )
 
 
@@ -496,8 +496,8 @@ _ACCSERVER = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=608,
-  serialized_end=703,
+  serialized_start=609,
+  serialized_end=896,
   methods=[
   _descriptor.MethodDescriptor(
     name='QueryUsersOnline',
@@ -506,6 +506,36 @@ _ACCSERVER = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_QUERYUSERSONLINEREQ,
     output_type=_QUERYUSERSONLINERSP,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='SendMsg',
+    full_name='protobuf.AccServer.SendMsg',
+    index=1,
+    containing_service=None,
+    input_type=_SENDMSGREQ,
+    output_type=_SENDMSGRSP,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='SendMsgAll',
+    full_name='protobuf.AccServer.SendMsgAll',
+    index=2,
+    containing_service=None,
+    input_type=_SENDMSGALLREQ,
+    output_type=_SENDMSGALLRSP,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetUserList',
+    full_name='protobuf.AccServer.GetUserList',
+    index=3,
+    containing_service=None,
+    input_type=_GETUSERLISTREQ,
+    output_type=_GETUSERLISTRSP,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

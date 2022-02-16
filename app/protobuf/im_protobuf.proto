@@ -12,15 +12,15 @@ service AccServer {
     // 查询用户是否在线
     rpc QueryUsersOnline (QueryUsersOnlineReq) returns (QueryUsersOnlineRsp) {
     }
-//    // 发送消息
-//    rpc SendMsg (SendMsgReq) returns (SendMsgRsp) {
-//    }
-//    // 给这台机器的房间内所有用户发送消息
-//    rpc SendMsgAll (SendMsgAllReq) returns (SendMsgAllRsp) {
-//    }
-//    // 获取用户列表
-//    rpc GetUserList (GetUserListReq) returns (GetUserListRsp) {
-//    }
+    // 发送消息
+    rpc SendMsg (SendMsgReq) returns (SendMsgRsp) {
+    }
+    // 给这台机器的房间内所有用户发送消息
+    rpc SendMsgAll (SendMsgAllReq) returns (SendMsgAllRsp) {
+    }
+    // 获取用户列表
+    rpc GetUserList (GetUserListReq) returns (GetUserListRsp) {
+    }
 }
 
 // 查询用户是否在线
