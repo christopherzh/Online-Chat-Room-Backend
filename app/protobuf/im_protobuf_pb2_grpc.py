@@ -5,7 +5,7 @@ import grpc
 from protobuf import im_protobuf_pb2 as im__protobuf__pb2
 
 
-class AccServerStub(object):
+class WebsocketServerStub(object):
     """The AccServer service definition.
     """
 
@@ -16,28 +16,28 @@ class AccServerStub(object):
             channel: A grpc.Channel.
         """
         self.QueryUsersOnline = channel.unary_unary(
-                '/protobuf.AccServer/QueryUsersOnline',
+                '/protobuf.WebsocketServer/QueryUsersOnline',
                 request_serializer=im__protobuf__pb2.QueryUsersOnlineReq.SerializeToString,
                 response_deserializer=im__protobuf__pb2.QueryUsersOnlineRsp.FromString,
                 )
         self.SendMsg = channel.unary_unary(
-                '/protobuf.AccServer/SendMsg',
+                '/protobuf.WebsocketServer/SendMsg',
                 request_serializer=im__protobuf__pb2.SendMsgReq.SerializeToString,
                 response_deserializer=im__protobuf__pb2.SendMsgRsp.FromString,
                 )
         self.SendMsgAll = channel.unary_unary(
-                '/protobuf.AccServer/SendMsgAll',
+                '/protobuf.WebsocketServer/SendMsgAll',
                 request_serializer=im__protobuf__pb2.SendMsgAllReq.SerializeToString,
                 response_deserializer=im__protobuf__pb2.SendMsgAllRsp.FromString,
                 )
         self.GetUserList = channel.unary_unary(
-                '/protobuf.AccServer/GetUserList',
+                '/protobuf.WebsocketServer/GetUserList',
                 request_serializer=im__protobuf__pb2.GetUserListReq.SerializeToString,
                 response_deserializer=im__protobuf__pb2.GetUserListRsp.FromString,
                 )
 
 
-class AccServerServicer(object):
+class WebsocketServerServicer(object):
     """The AccServer service definition.
     """
 
@@ -70,7 +70,7 @@ class AccServerServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_AccServerServicer_to_server(servicer, server):
+def add_WebsocketServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'QueryUsersOnline': grpc.unary_unary_rpc_method_handler(
                     servicer.QueryUsersOnline,
@@ -94,12 +94,12 @@ def add_AccServerServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'protobuf.AccServer', rpc_method_handlers)
+            'protobuf.WebsocketServer', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class AccServer(object):
+class WebsocketServer(object):
     """The AccServer service definition.
     """
 
@@ -114,7 +114,7 @@ class AccServer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/protobuf.AccServer/QueryUsersOnline',
+        return grpc.experimental.unary_unary(request, target, '/protobuf.WebsocketServer/QueryUsersOnline',
             im__protobuf__pb2.QueryUsersOnlineReq.SerializeToString,
             im__protobuf__pb2.QueryUsersOnlineRsp.FromString,
             options, channel_credentials,
@@ -131,7 +131,7 @@ class AccServer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/protobuf.AccServer/SendMsg',
+        return grpc.experimental.unary_unary(request, target, '/protobuf.WebsocketServer/SendMsg',
             im__protobuf__pb2.SendMsgReq.SerializeToString,
             im__protobuf__pb2.SendMsgRsp.FromString,
             options, channel_credentials,
@@ -148,7 +148,7 @@ class AccServer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/protobuf.AccServer/SendMsgAll',
+        return grpc.experimental.unary_unary(request, target, '/protobuf.WebsocketServer/SendMsgAll',
             im__protobuf__pb2.SendMsgAllReq.SerializeToString,
             im__protobuf__pb2.SendMsgAllRsp.FromString,
             options, channel_credentials,
@@ -165,7 +165,7 @@ class AccServer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/protobuf.AccServer/GetUserList',
+        return grpc.experimental.unary_unary(request, target, '/protobuf.WebsocketServer/GetUserList',
             im__protobuf__pb2.GetUserListReq.SerializeToString,
             im__protobuf__pb2.GetUserListRsp.FromString,
             options, channel_credentials,

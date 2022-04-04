@@ -8,7 +8,7 @@ option java_outer_classname = "ProtobufProto";
 package protobuf;
 
 // The AccServer service definition.
-service AccServer {
+service WebsocketServer {
     // 查询用户是否在线
     rpc QueryUsersOnline (QueryUsersOnlineReq) returns (QueryUsersOnlineRsp) {
     }
