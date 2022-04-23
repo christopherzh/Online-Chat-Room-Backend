@@ -131,8 +131,7 @@ async def get_cookie_or_token(
 
 @app.on_event('startup')
 async def on_startup():
-    loop = asyncio.get_event_loop()
-    loop.create_task(serve())
+    asyncio.get_event_loop().create_task(serve())
 
 
 @app.get("/")
