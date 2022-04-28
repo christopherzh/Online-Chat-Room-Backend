@@ -1,73 +1,14 @@
-from typing import Optional, Any, Dict, Set, List
-
-import grpc
-from grpc_reflection.v1alpha import reflection
 import asyncio
 
-from fastapi import Cookie, Depends, FastAPI, Query, WebSocket, status, WebSocketDisconnect
+import grpc
+from fastapi import FastAPI, WebSocketDisconnect
+from grpc_reflection.v1alpha import reflection
+from starlette.websockets import WebSocket
 
-from DB import config
-from protobuf import im_protobuf_pb2, im_protobuf_pb2_grpc
-from websocket_server import WebsocketServer
+from DB import redis_util
+from protobuf import im_protobuf_pb2_grpc, im_protobuf_pb2
+from ws.ws_model import *
 
-from pydantic import BaseModel, Field
-
-
-class LoginReq(BaseModel):
-    class Data(BaseModel):
-        user_id: str = Field(..., alias='userId')
-        app_id: int = Field(..., alias='appId')
-
-    seq: str
-    cmd: str
-    data: Data
-
-
-class LoginResp(BaseModel):
-    class Response(BaseModel):
-        code: int
-        code_msg: str = Field(..., alias='codeMsg')
-        data: Any
-
-    seq: str
-    cmd: str
-    response: Response
-
-
-class HeartBeat(BaseModel):
-    seq: str
-    cmd: str
-    data: Dict[str, Any]
-
-
-class SendMsgToClient(BaseModel):
-    class Response(BaseModel):
-        class Data(BaseModel):
-            target: str
-            type: str
-            msg: str
-            from_: str = Field(..., alias='from')
-
-        code: int
-        code_msg: str = Field(..., alias='codeMsg')
-        data: Data
-
-    seq: str
-    cmd: str
-    response: Response
-
-
-app = FastAPI()
-
-
-class UserStoreInfo(BaseModel):
-    pass
-
-
-class User():
-    user_id: str
-    status: int
-    ws: WebSocket
 
 class Singleton:
     def __init__(self, cls):
@@ -80,42 +21,52 @@ class Singleton:
         return self.__instance[self.__cls]
 
 
+# @Singleton
+# class RoomManager:
+#     def __init__(self):
+#         self.room_dict = Dict[int, List[str]]
+#
+#     def add_room(self, app_id: str):
+#         self.room_dict[app_id] = []
+#
+#     def del_room(self,app_id:str):
+#         pass
+
+
+def auth_user(token: str):
+    return True
+
+
 @Singleton
-class UserManager:
+class UserConnectionManager:
     def __init__(self):
         self.user_dict: Dict[str, User] = {}
+        self.room_dict: Dict[int, str] = {}
 
-
-@Singleton
-class RoomManager:
-    def __init__(self):
-        self.room_dict = Dict[int, List[str]]
-
-    def add_room(self, app_id: str):
-        self.room_dict[app_id] = []
-
-    def del_room(self,app_id:str):
-        pass
-
-
-@Singleton
-class WebsocketManager:
-    def __init__(self):
-        pass
-
-    async def connect(self, websocket: WebSocket, client_id):
+    async def connect_with_token(self, websocket: WebSocket, token: str):
+        # 需要： 接受连接，验证用户身份
         await websocket.accept()
-        self.active_connections[client_id] = websocket
+        if auth_user(token):
+            pass
+        else:
+            await self.disconnect(websocket, need_del_user=False)
 
-    def disconnect(self, client_id):
-        del self.active_connections[client_id]
+    async def disconnect(self, websocket: WebSocket, need_del_user: bool, user_id: Optional[str] = None):
+        await websocket.close()
+        if need_del_user:
+            if user_id is not None:
+                self.user_dict.pop(user_id)
+            else:
+                raise KeyError('User ID must not be None when you need delete user!')
 
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+    async def send_personal_msg(self, websocket: WebSocket, user_id: str, msg: str):
+        pass
 
-    async def broadcast(self, message: str,app_id:Optional[str]=None):
-        for connection in self.active_connections:
-            await self.active_connections[connection].send_text(message)
+    async def broadcast(self, message: str, app_id: Optional[str] = None):
+        pass
+
+    async def handle_receive_msg(self, msg):
+        pass
 
 
 async def serve():
@@ -135,21 +86,46 @@ async def serve():
     await server.wait_for_termination()
 
 
+app = FastAPI()
+user_conn_manager = UserConnectionManager()
+redis_controller = redis_util.RedisController()
+
+
+class WebsocketServer(im_protobuf_pb2_grpc.WebsocketServerServicer):
+    def QueryUsersOnline(self, request, context):
+        return im_protobuf_pb2.QueryUsersOnlineRsp(retCode=200, errMsg='Success', online=True)
+
+    def SendMsg(self, request, context):
+        pass
+        # return im_protobuf_pb2.SendMsgRsp()
+
+    def SendMsgAll(self, request, context):
+        pass
+        # return im_protobuf_pb2.SendMsgRsp()
+
+    def GetUserList(self, request, context):
+        pass
+        # return im_protobuf_pb2.GetUserListRsp()
+
+
 @app.on_event('startup')
 async def on_startup():
+    await redis_controller.register_service()
     asyncio.get_event_loop().create_task(serve())
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    pass
-    # await manager.connect(websocket, client_id)
-    # await manager.send_personal_message(str(config.get_localhost()), websocket)
-    # try:
-    #     while True:
-    #         data = await websocket.receive_text()
-    #         await manager.send_personal_message(f"你说了: {data}", websocket)
-    #
-    # except WebSocketDisconnect:
-    #     manager.disconnect(client_id)
-    #     await manager.broadcast(f"Client #{client_id} left the chat")
+@app.on_event("shutdown")
+def on_shutdown_event():
+    redis_controller.unregister_service()
+
+
+@app.websocket("ws")
+async def websocket_endpoint(websocket: WebSocket, token: str):
+    await user_conn_manager.connect_with_token(websocket, token)
+    try:
+        while True:
+            json_data = await websocket.receive_json()
+            user_conn_manager.handle_receive_msg(json_data)
+
+    except WebSocketDisconnect:
+        user_conn_manager.disconnect()
