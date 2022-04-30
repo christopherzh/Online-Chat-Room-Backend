@@ -29,9 +29,11 @@ class HeartBeat(BaseModel):
     cmd: str
     data: Dict[str, Any]
 
+
 class UserEnter(BaseModel):
     pass
     # 有新用户加入，通知房间内所有人
+
 
 class SendMsgToClient(BaseModel):
     class Response(BaseModel):
@@ -49,10 +51,13 @@ class SendMsgToClient(BaseModel):
     cmd: str
     response: Response
 
-class UserStoreInfo(BaseModel):
-    pass
 
 class User(BaseModel):
+    class UserInfo(BaseModel):
+        app_id: str
     user_id: str
-    app_id: str
-    is_online: bool
+    is_auth: bool
+    is_login: bool
+    user_info: Optional[UserInfo]
+
+

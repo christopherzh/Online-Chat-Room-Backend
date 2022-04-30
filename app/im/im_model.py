@@ -33,6 +33,7 @@ class UserOnlineResp(BaseModel):
 
 
 class MsgToUserReq(BaseModel):
+    seq: str
     app_id: int = Field(..., alias='appId')
     user_id: str = Field(..., alias='userId')
     message: str
@@ -48,6 +49,7 @@ class MsgToUserResp(BaseModel):
 
 
 class MsgToAllReq(BaseModel):
+    seq: str
     app_id: int = Field(..., alias='appId')
     user_id: str = Field(..., alias='userId')
     msg_id: str = Field(..., alias='msgId')

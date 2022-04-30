@@ -29,7 +29,7 @@ class GrpcServiceRequester:
         with grpc.insecure_channel(self.websocket_service_host + ':' + self.websocket_service_port) as channel:
             stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
             response = await stub.SendMsg(
-                im_protobuf_pb2.SendMsgReq(seq=1, appId=request.app_id, userId=request.user_id, cms='msg', type='text',
+                im_protobuf_pb2.SendMsgReq(seq=request.seq, appId=request.app_id, userId=request.user_id, cms='msg', type='text',
                                            msg=request.message, isLocal=False))
             return response
 
@@ -37,7 +37,7 @@ class GrpcServiceRequester:
         with grpc.insecure_channel(self.websocket_service_host + ':' + self.websocket_service_port) as channel:
             stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
             response = await stub.SendMsgAll(
-                im_protobuf_pb2.SendMsgAllReq(seq=1, appId=request.app_id, userId=request.user_id, cms='msg', type='text',
+                im_protobuf_pb2.SendMsgAllReq(seq=request.seq, appId=request.app_id, userId=request.user_id, cms='msg', type='text',
                                            msg=request.message))
             return response
 
