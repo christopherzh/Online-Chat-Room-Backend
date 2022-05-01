@@ -82,7 +82,6 @@ class UserConnectionManager:
         seq = str(time.time())
         await self.broadcast(seq, app_id, user_id, 'exit', 'text', "")
         res = True
-        send_results = ''  # grpc服务返回 sendMsgId，内容为发送失败的用户列表
         for service in await redis_controller.get_all_services():
             # if True:
             if service != config.get_localhost() + ':' + config.get_grpc_port():
@@ -139,6 +138,7 @@ class UserConnectionManager:
         for service in await redis_controller.get_all_services():
             # if True:
             if service != config.get_localhost() + ':' + config.get_grpc_port():
+                print(type(app_id),service,type(user_id))
                 with grpc.insecure_channel(service) as channel:
                     stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
                     response = stub.SendMsgAll(
@@ -207,6 +207,9 @@ async def on_shutdown_event():
     await redis_controller.unregister_service()
     print('服务关停')
 
+@app.get("/")
+async def get_root():
+    return 'root'
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str):
