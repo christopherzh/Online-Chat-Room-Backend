@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
+from starlette.websockets import WebSocket
 
 
 class LoginReq(BaseModel):
@@ -30,21 +31,16 @@ class HeartBeat(BaseModel):
     data: Dict[str, Any]
 
 
-class UserEnter(BaseModel):
-    pass
-    # 有新用户加入，通知房间内所有人
-
-
 class SendMsgToClient(BaseModel):
     class Response(BaseModel):
         class Data(BaseModel):
             target: str
             type: str
             msg: str
-            from_: str = Field(..., alias='from')
+            msg_from: str
 
         code: int
-        code_msg: str = Field(..., alias='codeMsg')
+        code_msg: str
         data: Data
 
     seq: str
@@ -54,10 +50,17 @@ class SendMsgToClient(BaseModel):
 
 class User(BaseModel):
     class UserInfo(BaseModel):
-        app_id: str
+        app_id: int
+
     user_id: str
     is_auth: bool
     is_login: bool
+    ws: WebSocket
     user_info: Optional[UserInfo]
 
+    class Config:
+        arbitrary_types_allowed = True
 
+    @validator("ws")
+    def check_websocket(cls, v):
+        return v
