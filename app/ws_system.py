@@ -209,7 +209,7 @@ async def on_shutdown_event():
 
 @app.get("/")
 async def get_root():
-    return 'root'
+    return {'root':'root'}
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str):

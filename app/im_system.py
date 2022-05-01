@@ -82,7 +82,7 @@ app.add_middleware(
 
 @app.get("/")
 async def get_root():
-    print("root")
+    return {'root':'root'}
 
 
 @app.get("/home/index")
