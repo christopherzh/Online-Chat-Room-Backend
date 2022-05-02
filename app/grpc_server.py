@@ -52,6 +52,7 @@ async def serve(user_connection_manager):
     im_protobuf_pb2_grpc.add_WebsocketServerServicer_to_server(WebsocketServer(user_connection_manager), server)
     reflection.enable_server_reflection(service_names, server)
     # 配置启动的端口
+    server.add_insecure_port('[::]:' + config.get_grpc_port())
     await server.start()
 
     # since server.start() will not block,
