@@ -14,20 +14,22 @@ class RedisController:
 
     def __get_connection(self, database: int):
         return aioredis.from_url(
-            "redis://" + self.redis_ip + ':' + config.get_redis_port(), password=self.redis_password, db=database,decode_responses=True
+            "redis://" + self.redis_ip + ':' + config.get_redis_port(), password=self.redis_password, db=database,
+            decode_responses=True
         )
 
     async def register_service(self):
         await self.connection_services.sadd('websocket_service_list',
                                             config.get_localhost() + ":" + config.get_grpc_port())
         # await self.connection_services.srem('websocket_service_list',
-        #                                     '127.0.0.1:50000')
-        await self.del_all_users()
-        print(await self.connection_services.smembers('websocket_service_list'))
+        #                                     '127.0.0.1:40000')
+        # await self.del_all_users()
+        print('注册成功后，redis服务列表:', await self.connection_services.smembers('websocket_service_list'))
 
     async def unregister_service(self):
         await self.connection_services.srem('websocket_service_list',
-                                            config.get_redis_ip() + ":" + config.get_grpc_port())
+                                            config.get_localhost() + ":" + config.get_grpc_port())
+        print('取消注册后，redis服务列表:', await self.connection_services.smembers('websocket_service_list'))
 
     async def get_single_service(self):
         # grpc_ip = '101.43.149.3'
@@ -44,14 +46,17 @@ class RedisController:
     async def add_user(self, user_id: str):
         await self.connection_users.hset('user_connect_info', user_id,
                                          config.get_localhost() + ':' + config.get_grpc_port())
-        print('redis:', await self.connection_users.hgetall('user_connect_info'))
+        print('添加用户后，用户redis列表:', await self.connection_users.hgetall('user_connect_info'))
 
     async def del_user(self, user_id: str):
         await self.connection_users.hdel('user_connect_info', user_id)
-        print('redis:', await self.connection_users.hgetall('user_connect_info'))
+        print('删除用户后，用户redis列表:', await self.connection_users.hgetall('user_connect_info'))
 
     async def del_all_users(self):
         await self.connection_users.delete('user_connect_info')
 
     async def get_user(self, user_id: str):
-        await self.connection_users.hget('user_connect_info', user_id)
+        return await self.connection_users.hget('user_connect_info', user_id)
+
+
+redis_controller = RedisController()

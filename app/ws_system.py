@@ -1,24 +1,15 @@
 import asyncio
-import signal
-import time
-from typing import Union, List
 
-import grpc
 from fastapi import FastAPI, WebSocketDisconnect
-from grpc_reflection.v1alpha import reflection
 from starlette.middleware.cors import CORSMiddleware
-from starlette.websockets import WebSocket
 
-import grpc_server
-from DB import config
-from DB.redis_util import RedisController
-from protobuf import im_protobuf_pb2_grpc, im_protobuf_pb2
-from ws.user_conn_manager import user_conn_manager
+from grpc_service import grpc_server
+from DB.redis_util import redis_controller
+from ws.user_conn_manager import UserConnectionManager
 from ws.ws_model import *
-redis_controller = RedisController()
 
 app = FastAPI()
-
+user_conn_manager=UserConnectionManager()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

@@ -1,14 +1,10 @@
 import time
-from typing import List
-
-import grpc
 
 from DB import config
-from DB.redis_util import RedisController
-from protobuf import im_protobuf_pb2_grpc, im_protobuf_pb2
-from ws.ws_model import *
-
-redis_controller = RedisController()
+from DB.redis_util import redis_controller
+from im.im_model import *
+from .ws_model import *
+from grpc_service.grpc_client import GrpcServiceRequester
 
 
 class Singleton:
@@ -44,9 +40,6 @@ class UserConnectionManager:
         self.user_dict: Dict[str, User] = {}
         self.room_dict: Dict[int, List[str]] = {}
 
-    def get_user_list(self, app_id):
-        pass
-
     async def connect_with_token(self, websocket: WebSocket, token: str):
         # 需要： 接受连接，验证用户身份
         await websocket.accept()
@@ -74,25 +67,54 @@ class UserConnectionManager:
 
         # 向所有房间内所有用户发送exit消息
         seq = str(time.time())
-        await self.broadcast(seq, app_id, user_id, 'exit', 'text', "")
-        res = True
-        for service in await redis_controller.get_all_services():
-            # if True:
-            if service != config.get_localhost() + ':' + config.get_grpc_port():
-                with grpc.insecure_channel(service) as channel:
-                    stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
-                    response = stub.SendMsgAll(
-                        im_protobuf_pb2.SendMsgAllReq(seq=seq + '-exit', appId=app_id, userId=user_id,
-                                                      cms='exit', type='text',
-                                                      msg=''))
-                    res = res and (response.retCode == '200') and (response.errMsg == 'Success')
+        cms = 'exit'
+        msg_type = 'text'
+        msg = ''
+        await self.broadcast(seq, app_id, user_id, cms, msg_type, msg)
+        await GrpcServiceRequester(redis_controller).send_msg_all(
+            MsgToAllReq(seq=seq, appId=app_id, userId=user_id, msgId=seq, message=msg), cms, msg_type,
+            config.get_localhost() + ':' + config.get_grpc_port())
 
     async def disconnect_all_users(self):
         for user_id in self.user_dict:
             await self.disconnect(user_id)
 
-    async def send_personal_msg(self, websocket: WebSocket, user_id: str, msg: str) -> bool:
-        pass
+    async def query_user_online(self, app_id: int, user_id: str) -> bool:
+        if user_id in self.user_dict:
+            return True
+        else:
+            connect_info = await redis_controller.get_user(user_id)
+            if connect_info is not None:
+                return True
+        return False
+
+    def get_user_list(self, app_id: int) -> List[str]:
+        if app_id in self.room_dict:
+            res = self.room_dict[app_id]
+        else:
+            res = []
+        return res
+
+    async def send_personal_msg(self, seq: str, app_id: int, user_id: str, cms: str, type: str, msg: str,
+                                is_local: bool) -> bool:
+        if user_id in self.user_dict:
+            await self.user_dict[user_id].ws.send_json(SendMsgToClient(seq=seq, cmd=cms,
+                                                                       response=SendMsgToClient.Response(code=200,
+                                                                                                         code_msg='Success',
+                                                                                                         data=SendMsgToClient.Response.Data(
+                                                                                                             target=user_id,
+                                                                                                             type=type,
+                                                                                                             msg=msg,
+                                                                                                             msg_from=''))).dict())
+            return True
+        elif not is_local:
+            connect_info = await redis_controller.get_user(user_id)
+            if connect_info is not None:
+                GrpcServiceRequester(redis_controller).send_msg(
+                    MsgToUserReq(seq=seq, appId=app_id, userId=user_id, message=msg), cms, type, True,
+                    connect_info)
+                return True
+        return False
 
     async def broadcast(self, seq: str, app_id: int, user_id: str, cms: str, type: str, msg: str) -> bool:
         if app_id not in self.room_dict:
@@ -101,19 +123,16 @@ class UserConnectionManager:
             if user == user_id:
                 pass
             else:
-                await self.user_dict.get(user).ws.send_json(SendMsgToClient(seq=seq, cmd=cms,
-                                                                            response=SendMsgToClient.Response(code=200,
-                                                                                                              code_msg='Success',
-                                                                                                              data=SendMsgToClient.Response.Data(
-                                                                                                                  target='',
-                                                                                                                  type=type,
-                                                                                                                  msg=msg,
-                                                                                                                  msg_from=user_id))).dict())
+                await self.user_dict[user].ws.send_json(SendMsgToClient(seq=seq, cmd=cms,
+                                                                        response=SendMsgToClient.Response(code=200,
+                                                                                                          code_msg='Success',
+                                                                                                          data=SendMsgToClient.Response.Data(
+                                                                                                              target='',
+                                                                                                              type=type,
+                                                                                                              msg=msg,
+                                                                                                              msg_from=user_id))).dict())
         return True
 
-    # async def handle_login(self,json_data:LoginReq):
-    #
-    # async def handle_enter(self,json_data:SendMsgToClient):
     async def handle_login_msg(self, json_data: LoginReq):
         print('login_json:', json_data)
         user_id: str = json_data.data.user_id
@@ -129,19 +148,11 @@ class UserConnectionManager:
         print('登录后room_dict', self.room_dict)
 
         # 向所有房间内所有用户发送enter消息
-        await self.broadcast(json_data.seq + '-enter', app_id, user_id, 'enter', 'text', "")
-        res = True
-        for service in await redis_controller.get_all_services():
-            # if True:
-            if service != config.get_localhost() + ':' + config.get_grpc_port():
-                print(type(app_id), service, type(user_id))
-                with grpc.insecure_channel(service) as channel:
-                    stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
-                    response = stub.SendMsgAll(
-                        im_protobuf_pb2.SendMsgAllReq(seq=str(time.time()) + '-enter', appId=app_id, userId=user_id,
-                                                      cms='enter', type='text',
-                                                      msg=''))
-                    res = res and (response.retCode == '200') and (response.errMsg == 'Success')
-
-
-user_conn_manager = UserConnectionManager()
+        seq: str = json_data.seq + '-enter'
+        cms = 'enter'
+        msg_type = 'text'
+        msg = ''
+        await self.broadcast(seq, app_id, user_id, cms, msg_type, msg)
+        await GrpcServiceRequester(redis_controller).send_msg_all(
+            MsgToAllReq(seq=seq, appId=app_id, userId=user_id, msgId=seq, message=msg), cms, msg_type,
+            config.get_localhost() + ':' + config.get_grpc_port())
