@@ -6,6 +6,7 @@ from typing import Union, List
 import grpc
 from fastapi import FastAPI, WebSocketDisconnect
 from grpc_reflection.v1alpha import reflection
+from starlette.middleware.cors import CORSMiddleware
 from starlette.websockets import WebSocket
 
 from DB import config
@@ -168,6 +169,13 @@ async def serve(user_connection_manager):
 app = FastAPI()
 user_conn_manager = UserConnectionManager()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class WebsocketServer(im_protobuf_pb2_grpc.WebsocketServerServicer):
     def __init__(self, user_connection_manager:UserConnectionManager):
