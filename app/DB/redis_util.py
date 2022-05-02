@@ -20,8 +20,8 @@ class RedisController:
     async def register_service(self):
         await self.connection_services.sadd('websocket_service_list',
                                             config.get_localhost() + ":" + config.get_grpc_port())
-        # await self.connection_services.srem('websocket_service_list',
-        #                                     '127.0.0.1:50053')
+        await self.connection_services.srem('websocket_service_list',
+                                            '127.0.0.1:50053', '127.0.0.1:50051')
         print(await self.connection_services.smembers('websocket_service_list'))
 
     async def unregister_service(self):

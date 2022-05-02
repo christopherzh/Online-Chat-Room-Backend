@@ -9,9 +9,9 @@ from protobuf import im_protobuf_pb2_grpc
 from im.im_model import *
 from DB.redis_util import RedisController
 
-async def run():
+def run():
     # 连接 rpc 服务器
-    with grpc.insecure_channel(await RedisController().get_single_service()) as channel:
+    with grpc.insecure_channel('localhost:50000') as channel:
         # 通过通道服务一个服务
         stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
         # 生成请求我们的服务的函数的时候，需要传递的参数体，它放在hello_pb2里面-请求体为：hello_pb2.HelloRequest对象
@@ -29,5 +29,5 @@ async def run1():
         user_list += response.userId
 
 if __name__ == '__main__':
-    asyncio.run(run1())
-    # print(asyncio.run(run1()))
+    # asyncio.run(run1())
+    print(run())
