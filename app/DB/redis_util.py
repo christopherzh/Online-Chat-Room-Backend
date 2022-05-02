@@ -20,8 +20,9 @@ class RedisController:
     async def register_service(self):
         await self.connection_services.sadd('websocket_service_list',
                                             config.get_localhost() + ":" + config.get_grpc_port())
-        await self.connection_services.srem('websocket_service_list',
-                                            '127.0.0.1:50053', '127.0.0.1:50051')
+        # await self.connection_services.srem('websocket_service_list',
+        #                                     '127.0.0.1:50000')
+        await self.del_all_users()
         print(await self.connection_services.smembers('websocket_service_list'))
 
     async def unregister_service(self):
@@ -41,7 +42,6 @@ class RedisController:
         await self.connection_services.delete('websocket_service_list')
 
     async def add_user(self, user_id: str):
-        # await self.del_all_users()
         await self.connection_users.hset('user_connect_info', user_id,
                                          config.get_localhost() + ':' + config.get_grpc_port())
         print('redis:', await self.connection_users.hgetall('user_connect_info'))

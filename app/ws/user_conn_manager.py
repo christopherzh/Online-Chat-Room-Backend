@@ -95,6 +95,8 @@ class UserConnectionManager:
         pass
 
     async def broadcast(self, seq: str, app_id: int, user_id: str, cms: str, type: str, msg: str) -> bool:
+        if app_id not in self.room_dict:
+            return True
         for user in self.room_dict[app_id]:
             if user == user_id:
                 pass

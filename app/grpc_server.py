@@ -30,7 +30,10 @@ class WebsocketServer(im_protobuf_pb2_grpc.WebsocketServerServicer):
             return im_protobuf_pb2.SendMsgAllRsp(retCode=400, errMsg='Fail', sendMsgId='')
 
     def GetUserList(self, request, context):
-        res = self.user_conn_manager.room_dict[request.appId]
+        if request.appId in self.user_conn_manager.room_dict:
+            res = self.user_conn_manager.room_dict[request.appId]
+        else:
+            res=[]
         return im_protobuf_pb2.GetUserListRsp(retCode=200, errMsg='Success', userId=res)
 
 
