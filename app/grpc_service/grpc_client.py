@@ -1,3 +1,5 @@
+from typing import Optional
+
 import grpc
 
 from protobuf import im_protobuf_pb2_grpc, im_protobuf_pb2
