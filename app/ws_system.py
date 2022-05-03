@@ -49,6 +49,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
                 elif json_data['cmd'] == 'heartbeat':
                     print('heartbeat')
                 elif json_data['cmd'] == 'ping':
+                    await websocket.send_json({"seq":json_data['seq'],"cmd":"ping","response":{"code":200,"codeMsg":"Success","data":'null'}})
                     print('ping')
 
         except WebSocketDisconnect:

@@ -48,18 +48,19 @@ class UserConnectionManager:
                 app_id = self.user_dict[user_id].user_info.app_id
                 self.room_dict[app_id].remove(user_id)
                 print('删除后room_map:', self.room_dict)
+                # 向所有房间内所有用户发送exit消息
+                seq = str(time.time())
+                cms = 'exit'
+                msg_type = 'text'
+                msg = ''
+                await self.broadcast(seq, app_id, user_id, cms, msg_type, msg)
+                await grpc_service_requester.send_msg_all(
+                    MsgToAllReq(seq=seq, appId=app_id, userId=user_id, msgId=seq, message=msg), cms, msg_type,
+                    config.get_localhost() + ':' + config.get_grpc_port())
             self.user_dict.pop(user_id)
             print('删除后user_map:', self.user_dict)
 
-        # 向所有房间内所有用户发送exit消息
-        seq = str(time.time())
-        cms = 'exit'
-        msg_type = 'text'
-        msg = ''
-        await self.broadcast(seq, app_id, user_id, cms, msg_type, msg)
-        await grpc_service_requester.send_msg_all(
-            MsgToAllReq(seq=seq, appId=app_id, userId=user_id, msgId=seq, message=msg), cms, msg_type,
-            config.get_localhost() + ':' + config.get_grpc_port())
+
 
     async def disconnect_all_users(self):
         for user_id in self.user_dict:
