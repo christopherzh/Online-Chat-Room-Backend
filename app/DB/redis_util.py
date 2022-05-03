@@ -1,8 +1,25 @@
-import asyncio
-
 import aioredis
 
 from DB import config
+
+
+class RedisServiceHandler:
+    def __init__(self):
+        self.redis_ip = config.get_redis_ip()
+        self.redis_password = config.get_pwd()
+        self.connection_services = self.__get_connection(0)  # 微服务获取
+
+    def __get_connection(self, database: int):
+        return aioredis.from_url(
+            "redis://" + self.redis_ip + ':' + config.get_redis_port(), password=self.redis_password, db=database,
+            decode_responses=True
+        )
+
+    async def get_single_service(self):
+        return await self.connection_services.srandmember('websocket_service_list')
+
+    async def get_all_services(self):
+        return await self.connection_services.smembers('websocket_service_list')
 
 
 class RedisController:
@@ -31,15 +48,6 @@ class RedisController:
                                             config.get_localhost() + ":" + config.get_grpc_port())
         print('取消注册后，redis服务列表:', await self.connection_services.smembers('websocket_service_list'))
 
-    async def get_single_service(self):
-        # grpc_ip = '101.43.149.3'
-        # grpc_port = '50051'
-        # return grpc_ip, grpc_port
-        return await self.connection_services.srandmember('websocket_service_list')
-
-    async def get_all_services(self):
-        return await self.connection_services.smembers('websocket_service_list')
-
     async def del_all_services(self):
         await self.connection_services.delete('websocket_service_list')
 
@@ -60,3 +68,4 @@ class RedisController:
 
 
 redis_controller = RedisController()
+redis_service_handler = RedisServiceHandler()

@@ -1,11 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from grpc_service.grpc_client import GrpcServiceRequester
+from grpc_service.grpc_client import grpc_service_requester
 from im.im_model import *
-from DB.redis_util import redis_controller
 
-grpc_service_requester = GrpcServiceRequester(redis_controller)
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -47,8 +45,7 @@ async def get_user_list(appId: int):
 
 @app.post("/user/sendMessage", response_model=MsgToUserResp)
 async def send_message(request: MsgToUserReq):
-    service:str = await redis_controller.get_single_service()
-    response = grpc_service_requester.send_msg(request, 'msg', 'text', False, service)
+    response = await grpc_service_requester.send_msg(request, 'msg', 'text', False)
     return MsgToUserResp(code=response.retCode, msg=response.errMsg,
                          data=MsgToUserResp.Data(sendResults=True))
 

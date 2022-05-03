@@ -2,14 +2,15 @@ import grpc
 
 from protobuf import im_protobuf_pb2_grpc, im_protobuf_pb2
 from im.im_model import *
+from DB.redis_util import RedisServiceHandler, redis_service_handler
 
 
 class GrpcServiceRequester:
-    def __init__(self, redis_controller):
-        self.redis_controller = redis_controller
+    def __init__(self):
+        self.redis_service_handler: RedisServiceHandler = redis_service_handler
 
     async def query_users_online(self, app_id: int, user_id: str):
-        websocket_service = await self.redis_controller.get_single_service()
+        websocket_service = await self.redis_service_handler.get_single_service()
         with grpc.insecure_channel(websocket_service) as channel:
             # 通过通道服务一个服务
             stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
@@ -20,7 +21,7 @@ class GrpcServiceRequester:
     async def get_user_list(self, app_id: int):
         res = True
         user_list: List[str] = []
-        for service in await self.redis_controller.get_all_services():
+        for service in await self.redis_service_handler.get_all_services():
             with grpc.insecure_channel(service) as channel:
                 stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
                 response = stub.GetUserList(im_protobuf_pb2.GetUserListReq(appId=app_id))
@@ -29,7 +30,10 @@ class GrpcServiceRequester:
         print('当前房间user_list:', user_list)
         return res, user_list
 
-    def send_msg(self, request: MsgToUserReq, cms: str, msg_type: str, is_local: bool, service: str):
+    async def send_msg(self, request: MsgToUserReq, cms: str, msg_type: str, is_local: bool,
+                       service: Optional[str] = None):
+        if service is None:
+            service = await self.redis_service_handler.get_single_service()
         with grpc.insecure_channel(service) as channel:
             stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
             response = stub.SendMsg(
@@ -40,7 +44,7 @@ class GrpcServiceRequester:
 
     async def send_msg_all(self, request: MsgToAllReq, cms: str, msg_type: str, exclude_service: Optional[str] = None):
         res = True
-        for service in await self.redis_controller.get_all_services():
+        for service in await self.redis_service_handler.get_all_services():
             if service != exclude_service:
                 with grpc.insecure_channel(service) as channel:
                     stub = im_protobuf_pb2_grpc.WebsocketServerStub(channel)
@@ -51,3 +55,6 @@ class GrpcServiceRequester:
                     res = res and (response.retCode == 200) and (response.errMsg == 'Success')
 
         return res
+
+
+grpc_service_requester = GrpcServiceRequester()

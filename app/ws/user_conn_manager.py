@@ -4,7 +4,7 @@ from DB import config
 from DB.redis_util import redis_controller
 from im.im_model import *
 from .ws_model import *
-from grpc_service.grpc_client import GrpcServiceRequester
+from grpc_service.grpc_client import grpc_service_requester
 
 
 class Singleton:
@@ -71,7 +71,7 @@ class UserConnectionManager:
         msg_type = 'text'
         msg = ''
         await self.broadcast(seq, app_id, user_id, cms, msg_type, msg)
-        await GrpcServiceRequester(redis_controller).send_msg_all(
+        await grpc_service_requester.send_msg_all(
             MsgToAllReq(seq=seq, appId=app_id, userId=user_id, msgId=seq, message=msg), cms, msg_type,
             config.get_localhost() + ':' + config.get_grpc_port())
 
@@ -110,7 +110,7 @@ class UserConnectionManager:
         elif not is_local:
             connect_info = await redis_controller.get_user(user_id)
             if connect_info is not None:
-                GrpcServiceRequester(redis_controller).send_msg(
+                await grpc_service_requester.send_msg(
                     MsgToUserReq(seq=seq, appId=app_id, userId=user_id, message=msg), cms, type, True,
                     connect_info)
                 return True
@@ -153,6 +153,6 @@ class UserConnectionManager:
         msg_type = 'text'
         msg = ''
         await self.broadcast(seq, app_id, user_id, cms, msg_type, msg)
-        await GrpcServiceRequester(redis_controller).send_msg_all(
+        await grpc_service_requester.send_msg_all(
             MsgToAllReq(seq=seq, appId=app_id, userId=user_id, msgId=seq, message=msg), cms, msg_type,
             config.get_localhost() + ':' + config.get_grpc_port())

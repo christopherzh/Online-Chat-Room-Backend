@@ -9,7 +9,7 @@ from ws.user_conn_manager import UserConnectionManager
 from ws.ws_model import *
 
 app = FastAPI()
-user_conn_manager=UserConnectionManager()
+user_conn_manager = UserConnectionManager()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

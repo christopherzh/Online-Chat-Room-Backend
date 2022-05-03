@@ -3,7 +3,6 @@ from grpc_reflection.v1alpha import reflection
 
 from DB import config
 from protobuf import im_protobuf_pb2, im_protobuf_pb2_grpc
-from ws.user_conn_manager import UserConnectionManager
 
 
 class WebsocketServer(im_protobuf_pb2_grpc.WebsocketServerServicer):
