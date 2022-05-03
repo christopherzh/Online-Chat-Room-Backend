@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from grpc_service.grpc_client import grpc_service_requester
 from im.im_model import *
 
+# TODO: 用户鉴权与登录信息入库
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -35,12 +36,8 @@ async def check_online_user(appId: int, userId: str):
 @app.get("/user/list", response_model=UserListResp)
 async def get_user_list(appId: int):
     response = await grpc_service_requester.get_user_list(appId)
-    if response[0]:
-        return UserListResp(code=200, msg='Success',
-                            data=UserListResp.Data(userCount=len(response[1]), userList=response[1]))
-    else:
-        return UserListResp(code=400, msg='Fail',
-                            data=UserListResp.Data(userCount=0, userList=[]))
+    return UserListResp(code=response['retCode'], msg=response['errMsg'],
+                        data=UserListResp.Data(userCount=len(response['userList']), userList=response['userList']))
 
 
 @app.post("/user/sendMessage", response_model=MsgToUserResp)

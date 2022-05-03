@@ -10,28 +10,35 @@ class WebsocketServer(im_protobuf_pb2_grpc.WebsocketServerServicer):
         self.user_conn_manager = user_connection_manager
 
     async def QueryUsersOnline(self, request, context):
-        res = await self.user_conn_manager.query_user_online(request.appId, request.userId)
-        return im_protobuf_pb2.QueryUsersOnlineRsp(retCode=200, errMsg='Success', online=res)
+        res: bool = await self.user_conn_manager.query_user_online(request.appId, request.userId)
+        # TODO: 业务逻辑待优化，目前为若查询不到用户就返回不在线，应考虑用户不存在（不在数据库）的问题
+        if res:
+            return im_protobuf_pb2.QueryUsersOnlineRsp(retCode=200, errMsg='Success', online=res)
+        else:
+            return im_protobuf_pb2.QueryUsersOnlineRsp(retCode=200, errMsg='Success', online=res)
 
     async def SendMsg(self, request, context):
-        res = await self.user_conn_manager.send_personal_msg(request.seq, request.appId, request.userId, request.cms,
-                                                             request.type, request.msg, request.isLocal)
+        res: bool = await self.user_conn_manager.send_personal_msg(request.seq, request.appId, request.userId,
+                                                                   request.cms,
+                                                                   request.type, request.msg, request.isLocal)
         if res:
             return im_protobuf_pb2.SendMsgRsp(retCode=200, errMsg='Success', sendMsgId=request.seq)
         else:
-            return im_protobuf_pb2.SendMsgRsp(retCode=400, errMsg='Fail', sendMsgId=request.seq)
+            return im_protobuf_pb2.SendMsgRsp(retCode=404, errMsg='用户不存在', sendMsgId=request.seq)
 
     async def SendMsgAll(self, request, context):
-        res = await self.user_conn_manager.broadcast(request.seq, request.appId, request.userId, request.cms,
-                                                     request.type,
-                                                     request.msg)
+        res: bool = await self.user_conn_manager.broadcast(request.seq, request.appId, request.userId, request.cms,
+                                                           request.type,
+                                                           request.msg)
         if res:
             return im_protobuf_pb2.SendMsgAllRsp(retCode=200, errMsg='Success', sendMsgId=request.seq)
+        # TODO: 目前不会返回错误信息
         else:
-            return im_protobuf_pb2.SendMsgAllRsp(retCode=400, errMsg='Fail', sendMsgId=request.seq)
+            return im_protobuf_pb2.SendMsgAllRsp(retCode=404, errMsg='Fail', sendMsgId=request.seq)
 
     def GetUserList(self, request, context):
         res = self.user_conn_manager.get_user_list(request.appId)
+        # TODO: 待错误处理
         return im_protobuf_pb2.GetUserListRsp(retCode=200, errMsg='Success', userId=res)
 
 

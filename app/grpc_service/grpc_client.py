@@ -30,7 +30,13 @@ class GrpcServiceRequester:
                 res = res and (response.retCode == 200) and (response.errMsg == 'Success')
                 user_list += response.userId
         print('当前房间user_list:', user_list)
-        return res, user_list
+        if res:
+            ret_code = 200
+            err_msg = 'Success'
+        else:
+            ret_code = 404
+            err_msg = 'Fail'
+        return {'retCode': ret_code, 'errMsg': err_msg, 'userList': user_list}
 
     async def send_msg(self, request: MsgToUserReq, cms: str, msg_type: str, is_local: bool,
                        service: Optional[str] = None):

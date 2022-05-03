@@ -17,19 +17,7 @@ class Singleton:
             self.__instance[self.__cls] = self.__cls()
         return self.__instance[self.__cls]
 
-
-# @Singleton
-# class RoomManager:
-#     def __init__(self):
-#         self.room_dict = Dict[int, List[str]]
-#
-#     def add_room(self, app_id: str):
-#         self.room_dict[app_id] = []
-#
-#     def del_room(self,app_id:str):
-#         pass
-
-
+# TODO: 用户鉴权
 def auth_user(token: str):
     return token
 
@@ -54,16 +42,14 @@ class UserConnectionManager:
 
     async def disconnect(self, user_id: str):
         print("删除用户map")
-
-        if self.user_dict[user_id].is_login:
-            await redis_controller.del_user(user_id)
-            app_id = self.user_dict[user_id].user_info.app_id
-            self.room_dict[app_id].remove(user_id)
-            print('删除后room_map:', self.room_dict)
-
         if user_id in self.user_dict:
+            if self.user_dict[user_id].is_login:
+                await redis_controller.del_user(user_id)
+                app_id = self.user_dict[user_id].user_info.app_id
+                self.room_dict[app_id].remove(user_id)
+                print('删除后room_map:', self.room_dict)
             self.user_dict.pop(user_id)
-        print('删除后user_map:', self.user_dict)
+            print('删除后user_map:', self.user_dict)
 
         # 向所有房间内所有用户发送exit消息
         seq = str(time.time())
@@ -81,7 +67,7 @@ class UserConnectionManager:
 
     async def query_user_online(self, app_id: int, user_id: str) -> bool:
         if user_id in self.user_dict:
-            return True
+            return self.user_dict[user_id].is_login
         else:
             connect_info = await redis_controller.get_user(user_id)
             if connect_info is not None:
@@ -98,14 +84,15 @@ class UserConnectionManager:
     async def send_personal_msg(self, seq: str, app_id: int, user_id: str, cms: str, type: str, msg: str,
                                 is_local: bool) -> bool:
         if user_id in self.user_dict:
-            await self.user_dict[user_id].ws.send_json(SendMsgToClient(seq=seq, cmd=cms,
-                                                                       response=SendMsgToClient.Response(code=200,
-                                                                                                         code_msg='Success',
-                                                                                                         data=SendMsgToClient.Response.Data(
-                                                                                                             target=user_id,
-                                                                                                             type=type,
-                                                                                                             msg=msg,
-                                                                                                             msg_from=''))).dict())
+            websocket = self.user_dict[user_id].ws
+            await websocket.send_json(SendMsgToClient(seq=seq, cmd=cms,
+                                                      response=SendMsgToClient.Response(code=200,
+                                                                                        code_msg='Success',
+                                                                                        data=SendMsgToClient.Response.Data(
+                                                                                            target=user_id,
+                                                                                            type=type,
+                                                                                            msg=msg,
+                                                                                            msg_from=''))).dict())
             return True
         elif not is_local:
             connect_info = await redis_controller.get_user(user_id)
@@ -123,20 +110,22 @@ class UserConnectionManager:
             if user == user_id:
                 pass
             else:
-                await self.user_dict[user].ws.send_json(SendMsgToClient(seq=seq, cmd=cms,
-                                                                        response=SendMsgToClient.Response(code=200,
-                                                                                                          code_msg='Success',
-                                                                                                          data=SendMsgToClient.Response.Data(
-                                                                                                              target='',
-                                                                                                              type=type,
-                                                                                                              msg=msg,
-                                                                                                              msg_from=user_id))).dict())
+                websocket = self.user_dict[user].ws
+                await websocket.send_json(SendMsgToClient(seq=seq, cmd=cms,
+                                                          response=SendMsgToClient.Response(code=200,
+                                                                                            code_msg='Success',
+                                                                                            data=SendMsgToClient.Response.Data(
+                                                                                                target='',
+                                                                                                type=type,
+                                                                                                msg=msg,
+                                                                                                msg_from=user_id))).dict())
         return True
 
     async def handle_login_msg(self, json_data: LoginReq):
         print('login_json:', json_data)
         user_id: str = json_data.data.user_id
         app_id: int = json_data.data.app_id
+
         self.user_dict[user_id].user_info = User.UserInfo(app_id=app_id)
         self.user_dict[user_id].is_login = True
         await redis_controller.add_user(user_id)
